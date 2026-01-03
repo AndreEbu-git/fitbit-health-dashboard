@@ -5,7 +5,7 @@
 An interactive web dashboard built with **Streamlit** that analyzes real Fitbit wearable data to provide personalized health and fitness insights, including activity trends, sleep correlations, and AI-powered calorie burn predictions.
 
 ## Live Demo
-👉 [Open the dashboard here]fitbit-health-dashboard.streamlit.app/
+👉 [Open the dashboard here](https://fitbit-health-dashboard.streamlit.app/)
 
 ## Features
 - **User Selection**: Explore data from 33 real Fitbit users.
