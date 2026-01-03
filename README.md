@@ -38,4 +38,17 @@ An interactive web dashboard built with **Streamlit** that analyzes real Fitbit 
 3. Run the app:
    ```bash
    streamlit run app.py
+
+## Model Details
+
+-  Random Forest Regressor trained on activity features (steps, active minutes, sedentary time)
+-  Accuracy: R² = 0.58, MAE = 356 calories (captures main trends; room for more data/features)
+
+## Future Improvements
+
+-  Add obesity risk prediction based on BMI/weight data (if available)
+-  Integrate more datasets (e.g., heart rate)
+-  Enhance model with user demographics for better personalization
+
+Built by Andre Ebu. Feel free to star!
    
