@@ -1,16 +1,17 @@
+%%writefile app.py
 import streamlit as st
 import pandas as pd
-import altair as alt
+import matplotlib.pyplot as plt
+import seaborn as sns
 import joblib
 import numpy as np
 
-# Load data and model
+# Load data and simple model
 df = pd.read_csv('fitbit_processed.csv')
 df['Date'] = pd.to_datetime(df['Date'])
-model_bundle = joblib.load('calorie_predictor_v2.pkl')
-model = model_bundle['model']
-preprocessor = model_bundle['preprocessor']
+model = joblib.load('calorie_predictor_simple.pkl')
 
+# Ensure TotalActiveMinutes
 if 'TotalActiveMinutes' not in df.columns:
     df['TotalActiveMinutes'] = df['VeryActiveMinutes'] + df['FairlyActiveMinutes'] + df['LightlyActiveMinutes']
 
@@ -37,75 +38,40 @@ st.markdown(f"""
 **Avg Calories Burned**: {avg_calories:.0f}
 """)
 
-# Altair Charts (reliable and beautiful)
-# Steps Trend
-steps_chart = alt.Chart(user_data).mark_line(color='cyan', strokeWidth=3).encode(
-    x='Date:T',
-    y='TotalSteps:Q'
-).properties(title=f"Daily Steps Trend for User {user_id}", width=800, height=400)
-st.altair_chart(steps_chart, use_container_width=True)
+# Charts using native Streamlit (they work perfectly on Streamlit Cloud)
+st.subheader(f"Daily Steps Trend for User {user_id}")
+st.line_chart(user_data.set_index('Date')['TotalSteps'])
 
-# Activity Level Distribution
-activity_chart = alt.Chart(user_data).mark_bar().encode(
-    x='ActivityLevel:N',
-    y='count()',
-    color=alt.Color('ActivityLevel:N', scale=alt.Scale(scheme='category10'))
-).properties(title="Activity Level Distribution", width=600)
-st.altair_chart(activity_chart, use_container_width=True)
+st.subheader("Activity Level Distribution")
+st.bar_chart(user_data['ActivityLevel'].value_counts())
 
-# Steps vs Sleep
-if not user_data.dropna(subset=['TotalMinutesAsleep']).empty:
-    sleep_chart = alt.Chart(user_data.dropna(subset=['TotalMinutesAsleep'])).mark_circle(size=100, opacity=0.8).encode(
-        x='TotalMinutesAsleep:Q',
-        y='TotalSteps:Q',
-        color=alt.value('orange'),
-        tooltip=['Date', 'TotalSteps', 'TotalMinutesAsleep']
-    ).properties(title="Steps vs Sleep (minutes)", width=700, height=500)
-    st.altair_chart(sleep_chart, use_container_width=True)
+st.subheader("Steps vs Sleep")
+sleep_data = user_data.dropna(subset=['TotalMinutesAsleep'])
+if not sleep_data.empty:
+    st.scatter_chart(sleep_data[['TotalMinutesAsleep', 'TotalSteps']].rename(columns={'TotalMinutesAsleep': 'Sleep Minutes'}))
 else:
-    st.info("No sleep data available for this user.")
+    st.info("No sleep data for this user.")
 
-# AI Predictor
-st.header("🔮 Predict Tomorrow's Calories Burned")
-st.markdown("Sliders start at your averages — adjust to plan!")
-
-avg_steps = user_data['TotalSteps'].mean()
-avg_very = user_data['VeryActiveMinutes'].mean()
-avg_fairly = user_data['FairlyActiveMinutes'].mean()
-avg_lightly = user_data['LightlyActiveMinutes'].mean()
-avg_sedentary = user_data['SedentaryMinutes'].mean()
+# Simple Predictor
+st.header("🔮 Predict Calories Burned")
+st.markdown("Adjust to simulate a day!")
 
 col1, col2 = st.columns(2)
 with col1:
-    steps = st.slider("Total Steps", 0, 30000, int(avg_steps), step=500)
+    steps = st.slider("Total Steps", 0, 30000, int(avg_steps))
     very = st.slider("Very Active Minutes", 0, 180, int(avg_very))
-    fairly = st.slider("Fairly Active Minutes", 0, 180, int(avg_fairly))
+    fairly = st.slider("Fairly Active Minutes", 0, 180, 20)
 with col2:
-    lightly = st.slider("Lightly Active Minutes", 0, 720, int(avg_lightly))
-    sedentary = st.slider("Sedentary Minutes", 0, 1440, int(avg_sedentary))
+    lightly = st.slider("Lightly Active Minutes", 0, 720, 200)
+    sedentary = st.slider("Sedentary Minutes", 0, 1440, 600)
 
 total_active = very + fairly + lightly
 
-# Prediction
-input_cat = pd.DataFrame({'Id': [user_id]})
-input_activity = pd.DataFrame([[steps, very, fairly, lightly, sedentary, total_active]],
-                              columns=['TotalSteps', 'VeryActiveMinutes', 'FairlyActiveMinutes',
-                                       'LightlyActiveMinutes', 'SedentaryMinutes', 'TotalActiveMinutes'])
-input_df = pd.concat([input_cat, input_activity], axis=1)
-
-X_input = preprocessor.transform(input_df)
-prediction = model.predict(X_input)[0]
+input_data = np.array([[steps, very, fairly, lightly, sedentary, total_active]])
+prediction = model.predict(input_data)[0]
 
 delta = prediction - avg_calories
-st.markdown(f"**Predicted Calories Burned: {int(prediction)}** 🔥")
-st.caption(f"That's {abs(int(delta))} calories **{'more' if delta > 0 else 'less'}** than your average")
+st.markdown(f"**Predicted Calories: {int(prediction)}** 🔥")
+st.caption(f"{abs(int(delta))} calories {'more' if delta > 0 else 'less'} than your average")
 
-if delta > 50:
-    st.success("Excellent — higher burn day!")
-elif delta < -50:
-    st.warning("Lower activity — try boosting intensity!")
-else:
-    st.info("Similar to average — consistent progress!")
-
-st.balloons()
-st.success("Your final AI-powered dashboard is ready!")
+st.success("Dashboard deployed successfully!")
