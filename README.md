@@ -30,4 +30,12 @@ An interactive web dashboard built with **Streamlit** that analyzes real Fitbit 
 1. Clone the repo:
    ```bash
    git clone https://github.com/AndreEbu-git/fitbit-health-dashboard.git
+   cd fitbit-health-dashboard
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+
+3. Run the app:
+   ```bash
+   streamlit run app.py
    
