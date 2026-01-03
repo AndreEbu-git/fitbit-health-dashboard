@@ -29,5 +29,5 @@ An interactive web dashboard built with **Streamlit** that analyzes real Fitbit 
 ## How to Run Locally
 1. Clone the repo:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-   cd YOUR_REPO_NAME
+   git clone https://github.com/AndreEbu-git/fitbit-health-dashboard.git
+   
